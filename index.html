@@ -1,15 +1,241 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Aequitax</title>
+    <base target="_top">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arial:wght@400;700&display=swap">
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        text-align: center;
+        background-color: #f4f4f4;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+        background: white;
+        box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+        border-radius: 10px;
+      }
+      label {
+        display: block;
+        text-align: left;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+      input, button {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      #signature {
+        margin-top: 20px;
+        padding: 15px;
+        text-align: left;
+        border: 1px solid #ccc;
+        background: white;
+      }
+      .signature-container {
+        font-family: 'Arial', sans-serif;
+        color: #1a3e7c;
+      }
+      .logo {
+        width: 200px;
+        height: auto;
+        display: block;
+        margin-top: 5px;
+      }
+      .copy-btn {
+        background: #1a3e7c;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+      .logo-picker {
+        margin: 15px 0 10px 0;
+        text-align: left;
+      }
+      .logo-options {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .logo-option {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #ddd;
+        padding: 6px 8px;
+        border-radius: 6px;
+        background: #fafafa;
+      }
+      .logo-thumb {
+        height: 40px;
+        width: auto;
+        display: block;
+      }
+      .logo-preview {
+        margin: 10px 0 5px 0;
+      }
+      .dark-surface {
+        background-color: #121212 !important;
+        border-color: #333 !important;
+        color: #eaeaea !important;
+      }
+    </style>
   </head>
   <body>
-    <main>
-      <h1>Welcome to Aequitax</h1>
-    </main>
+    <div class="container">
+      <img id="heroBanner" src="standard.png" alt="Aequitax logo" style="width: 600px; height: auto; display: block; margin-top: 5px; margin-bottom: 5px;">
+      <h2>Aequitax Email Signature Generator</h2>
+      <div class="logo-picker">
+        <label>Choose logo:</label>
+        <div class="logo-options" id="logoOptions">
+          <label class="logo-option">
+            <input type="radio" name="logo" value="standard.png" checked onchange="onLogoChange(this.value)">
+            <img src="standard.png" alt="Standard logo" class="logo-thumb">
+          </label>
+          <label class="logo-option">
+            <input type="radio" name="logo" value="20_years.png" onchange="onLogoChange(this.value)">
+            <img src="20_years.png" alt="20 years logo" class="logo-thumb">
+          </label>
+        </div>
+      </div>
+      <label for="name">Full Name:</label>
+      <input type="text" id="name" placeholder="Enter your full name">
+      <label for="phone_ch">Swiss Phone (optional):</label>
+      <input type="text" id="phone_ch" placeholder="e.g. +41000000000" oninput="autoFormatPhoneNumber(this, 'CH')">
+      <label for="phone_it">Italian Phone (optional):</label>
+      <input type="text" id="phone_it" placeholder="e.g. +390000000000" oninput="autoFormatPhoneNumber(this, 'IT')">
+      <label for="email">Email Address:</label>
+      <input type="email" id="email" placeholder="n.lastname@aequitax.pro">
+      <label for="free_text">Additional Info (optional):</label>
+      <input type="text" id="free_text" placeholder="Enter job title, department, or custom message">
+      <div style="display:flex; align-items:center; gap:12px; margin-top:8px;">
+        <button onclick="generateSignature()" class="copy-btn">Generate Signature</button>
+        <label style="display:flex; align-items:center; gap:6px; font-size: 12px;">
+          <input type="checkbox" id="darkToggle" onchange="onDarkToggle()"> Dark preview
+        </label>
+      </div>
+      <div id="signature"></div>
+      <button onclick="copySignature()" class="copy-btn">Copy to Clipboard</button>
+    </div>
+    <script>
+      let selectedLogoURL = 'standard.png';
+      function onLogoChange(value) {
+        selectedLogoURL = value;
+        const preview = document.getElementById('selectedLogoPreview');
+        if (preview) preview.src = value;
+        // If a signature is already present, regenerate to reflect logo change
+        if (document.getElementById('signature').innerHTML.trim().length > 0) {
+          generateSignature();
+        }
+      }
+      function onDarkToggle() {
+        // Regenerate to reflect dark state if a signature is already present
+        if (document.getElementById('signature').innerHTML.trim().length > 0) {
+          generateSignature();
+        }
+      }
+      function generateSignature() {
+        var name = document.getElementById("name").value.trim();
+        var phone_ch = document.getElementById("phone_ch").value.trim();
+        var phone_it = document.getElementById("phone_it").value.trim();
+        var email = document.getElementById("email").value.trim();
+        var freeText = document.getElementById("free_text").value.trim();
+        var isDark = !!(document.getElementById('darkToggle') && document.getElementById('darkToggle').checked);
+        phone_ch = formatSwissNumber(phone_ch);
+        phone_it = formatItalianNumber(phone_it);
+        var logoURL = selectedLogoURL;
+        var website = "www.aequitax.com";
+        var color = isDark ? "#e6eefb" : "#004b8d";
+        var phoneSection = "";
+        if (phone_ch || phone_it) {
+          phoneSection = `<span style="color: ${color}; font-weight: bold;">Mobile: `;
+          if (phone_ch) phoneSection += `CH: ${phone_ch}`;
+          if (phone_ch && phone_it) phoneSection += " - ";
+          if (phone_it) phoneSection += `IT: ${phone_it}`;
+          phoneSection += `</span>`;
+        }
+        var signatureHTML = `
+            <table style="font-family: 'Arial', sans-serif; font-size: 9px; line-height: 1.4; color: ${color}; border-collapse: collapse;">
+                <tr>
+                    <td style="padding-bottom: 5px;">
+                        <strong style="font-size: 24px;">${name}</strong><br>
+                        ${freeText ? `<span style="font-size: 12px; color: ${color};">${freeText}<br><br></span>` : ""}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-bottom: 5px;">
+                        <img src="${logoURL}" width="300" height="auto" style="width: 8cm; height: auto; display: block;">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-bottom: 5px; color: ${color};">
+                        <strong>Via Monte Boglia 7a - 6900 Lugano (Switzerland)</strong><br>
+                        ${phoneSection ? `<strong style="color: ${color};">${phoneSection}<br></strong>` : ""}
+                        <strong><a href="mailto:${email}" style="color: ${color}; text-decoration: none; font-size: 9px;">${email}</a></strong> - 
+                        <strong><a href="https://${website}" target="_blank" style="color: ${color}; text-decoration: none; font-size: 9px;">${website}</a></strong>
+                    </td>
+                </tr>
+            </table>
+            <div style="margin-top: 10px; font-size: 8px; color: #555; text-align: left;">
+                <strong>Legal disclaimer:</strong><br><br>
+                This message or its attached file are intended only for the use of the individual or entity to which it is addressed and may contain privileged or confidential information exempt from disclosure under applicable law. If you are neither the addressee, nor responsible for delivering to such person, you are notified that any use, dissemination, distribution, storage or copying is strictly prohibited. In such case, you must destroy it and immediately notify the sender. Any information shall then be understood as non official.
+            </div>
+        `;
+        var sig = document.getElementById("signature");
+        sig.innerHTML = signatureHTML;
+        if (isDark) {
+          sig.classList.add('dark-surface');
+        } else {
+          sig.classList.remove('dark-surface');
+        }
+      }
+      function copySignature() {
+        var htmlContent = document.getElementById("signature").innerHTML;
+        var blob = new Blob([htmlContent], { type: "text/html" });
+        var clipboardItem = new ClipboardItem({ "text/html": blob });
+        navigator.clipboard.write([clipboardItem])
+          .then(() => alert("Signature copied as HTML!"))
+          .catch(err => console.error("Could not copy signature:", err));
+      }
+      function formatSwissNumber(number) {
+        let cleaned = number.replace(/\D/g, "");
+        if (cleaned.startsWith("41")) {
+          cleaned = "+" + cleaned;
+        } else if (cleaned.startsWith("0")) {
+          cleaned = "+41" + cleaned.substring(1);
+        }
+        if (cleaned.length >= 11) {
+          return cleaned.replace(/(\+\d{2})?(\d{2})(\d{3})(\d{3})/, "$1 $2 $3 $4");
+        }
+        return number;
+      }
+      function formatItalianNumber(number) {
+        let cleaned = number.replace(/\D/g, "");
+        if (cleaned.startsWith("39")) {
+          cleaned = "+" + cleaned;
+        } else if (cleaned.startsWith("0")) {
+          cleaned = "+39" + cleaned.substring(1);
+        }
+        if (cleaned.length >= 12) {
+          return cleaned.replace(/(\+\d{2})?(\d{3})(\d{4})(\d{3})/, "$1 $2 $3 $4");
+        }
+        return number;
+      }
+      function autoFormatPhoneNumber(inputField, country) {
+        let number = inputField.value;
+        if (country === "CH") {
+          inputField.value = formatSwissNumber(number);
+        } else if (country === "IT") {
+          inputField.value = formatItalianNumber(number);
+        }
+      }
+    </script>
   </body>
 </html>
-
-
