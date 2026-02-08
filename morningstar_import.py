@@ -56,9 +56,9 @@ for i, inv in enumerate(list_inv, 1):
             end_date=end_date
         )
         holdings_frames.append(h)
-        # Save each investment's holdings to CSV as a checkpoint
-        h.to_csv(f'holdings_{client}_{year}_{inv}.csv', index=False)
-        print(f"[{i}/{len(list_inv)}] {inv}: {len(h)} rows (saved to CSV)")
+        # Save each investment's holdings as a pickle checkpoint
+        h.to_pickle(f'holdings_{client}_{year}_{inv}.pkl')
+        print(f"[{i}/{len(list_inv)}] {inv}: {len(h)} rows (saved to pkl)")
     except Exception as e:
         failed_inv.append(inv)
         print(f"[{i}/{len(list_inv)}] {inv}: ERROR -> {e}")
