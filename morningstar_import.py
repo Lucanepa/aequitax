@@ -67,6 +67,7 @@ if failed_inv:
     print(f"\n⚠️ Failed investments ({len(failed_inv)}): {failed_inv}")
 print(f"✅ Successful: {len(holdings_frames)}/{len(list_inv)}")
 
+holdings_frames = [df for df in holdings_frames if not df.empty]
 holdings = pd.concat(holdings_frames, ignore_index=True) if holdings_frames else pd.DataFrame()
 print(f"Holdings raw rows: {len(holdings)}")
 
